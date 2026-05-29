@@ -24,8 +24,11 @@ data "aws_iam_policy_document" "param_read" {
   statement {
     sid     = "ReadProjectParams"
     actions = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
+    # GetParametersByPath authorizes against the path node itself, so both the
+    # bare path and the wildcard for child parameters are required.
     resources = [
-      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/*"
+      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}",
+      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/*",
     ]
   }
 

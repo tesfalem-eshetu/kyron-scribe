@@ -57,7 +57,7 @@ export function ObservationsField({
           {generating
             ? "Generating…"
             : hasContent
-              ? "Regenerate"
+              ? "Regenerate SOAP Note"
               : "Generate SOAP Note"}
         </Button>
       </div>

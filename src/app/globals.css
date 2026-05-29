@@ -1473,11 +1473,6 @@ body {
 .rec-dot.connecting {
   background: var(--accent);
 }
-.dictation-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
 .mic-btn {
   display: inline-grid;
   place-items: center;

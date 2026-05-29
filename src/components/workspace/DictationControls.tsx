@@ -56,18 +56,15 @@ export function DictationControls({
         <span className="dictation-label">Voice dictation</span>
 
         {status === "idle" && (
-          <span className="dictation-cta">
-            <button
-              type="button"
-              className="mic-btn"
-              onClick={startRealtime}
-              disabled={disabled}
-              aria-label="Start voice dictation"
-            >
-              <Mic aria-hidden="true" />
-            </button>
-            <span className="dictation-hint">Dictate observations</span>
-          </span>
+          <button
+            type="button"
+            className="mic-btn"
+            onClick={startRealtime}
+            disabled={disabled}
+            aria-label="Start voice dictation"
+          >
+            <Mic aria-hidden="true" />
+          </button>
         )}
 
         {(status === "requesting-mic" || status === "connecting") && (

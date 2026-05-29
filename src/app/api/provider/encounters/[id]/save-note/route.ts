@@ -3,7 +3,8 @@ import { z } from "zod";
 import { requireProvider } from "@/lib/auth/guards";
 import { saveNoteVersion } from "@/lib/notes/saveNoteVersion";
 import { runPatientContextSummaryGate } from "@/lib/patients/runPatientContextSummaryGate";
-import { toErrorResponse, validationError } from "@/lib/errors";
+import { writeAuditLog } from "@/lib/audit/writeAuditLog";
+import { ApiError, toErrorResponse, validationError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,13 @@ const SaveNoteSchema = z.object({
 });
 
 export async function POST(req: NextRequest, context: RouteContext) {
+  let providerId: string | undefined;
+  let encounterId: string | undefined;
   try {
     const user = await requireProvider();
+    providerId = user.id;
     const { id } = await context.params;
+    encounterId = id;
 
     const body = await req.json().catch(() => null);
     const parsed = SaveNoteSchema.safeParse(body);
@@ -72,6 +77,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
       { status: 201 },
     );
   } catch (error) {
+    // Audit save failures that occur after authentication (validation, version
+    // conflict, ownership). Pre-auth failures have no provider to attribute.
+    if (providerId && error instanceof ApiError) {
+      await writeAuditLog({
+        userId: providerId,
+        action: "NOTE_SAVE_FAILED",
+        entityType: "Encounter",
+        entityId: encounterId,
+        metadata: { code: error.code },
+      });
+    }
     return toErrorResponse(error);
   }
 }

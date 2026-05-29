@@ -33,16 +33,12 @@ function encodeSse(event: string, data: unknown): string {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-function assertTranscriptIsWorthSending(transcript: string) {
+function isTranscriptTooShort(transcript: string): boolean {
   const words = transcript.trim().split(/\s+/).filter(Boolean);
-  if (
+  return (
     transcript.trim().length < MIN_TRANSCRIPT_CHARS ||
     words.length < MIN_TRANSCRIPT_WORDS
-  ) {
-    throw insufficientClinicalContent(
-      "Transcript is too short to generate a clinical note.",
-    );
-  }
+  );
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {
@@ -73,7 +69,22 @@ export async function POST(req: NextRequest, context: RouteContext) {
       "";
 
     if (!templateId) throw validationError("A template is required.");
-    assertTranscriptIsWorthSending(transcript);
+
+    // Scenario 1: deterministic pre-check blocks non-clinical/empty input before
+    // any model call. The draft is left untouched so the provider can edit and
+    // retry (master plan 9.8).
+    if (isTranscriptTooShort(transcript)) {
+      await writeAuditLog({
+        userId: user.id,
+        action: "NOTE_GENERATION_BLOCKED_INSUFFICIENT_CONTENT",
+        entityType: "Encounter",
+        entityId: encounter.id,
+        metadata: { stage: "pre-check" },
+      });
+      throw insufficientClinicalContent(
+        "Transcript is too short to generate a clinical note.",
+      );
+    }
 
     const template = await prisma.template.findFirst({
       where: { id: templateId, isActive: true },

@@ -154,7 +154,7 @@ export async function runPatientContextSummaryGate(
 
     await writeAuditLog({
       userId: input.providerId,
-      action: "PATIENT_CONTEXT_SUMMARY_SKIPPED",
+      action: "PATIENT_CONTEXT_SUMMARY_UPDATE_SKIPPED",
       entityType: "PatientContextSummary",
       entityId: input.patientId,
       metadata: { noteVersionId: input.noteVersionId, reason },
@@ -174,7 +174,7 @@ export async function runPatientContextSummaryGate(
       });
       await writeAuditLog({
         userId: input.providerId,
-        action: "PATIENT_CONTEXT_SUMMARY_FAILED",
+        action: "PATIENT_CONTEXT_SUMMARY_UPDATE_FAILED",
         entityType: "PatientContextSummary",
         entityId: input.patientId,
         metadata: { noteVersionId: input.noteVersionId, reason },

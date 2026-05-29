@@ -13,12 +13,12 @@ via Terraform.
 
 ## Test accounts
 
-Seeded by `prisma/seed.ts` (password is the same for all): `password123`
+Seeded by `prisma/seed.ts`:
 
-- Provider: `dr.smith@example.com`
-- Provider: `dr.lee@example.com`
-- Provider: `dr.johnson@example.com`
-- Admin: `admin@example.com`
+- Provider: `dr.smith@example.com` / `password123`
+- Provider: `dr.lee@example.com` / `password123`
+- Provider: `dr.johnson@example.com` / `password123`
+- Admin: `admin@example.com` / `admin123`
 
 ## Prerequisites
 

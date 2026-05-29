@@ -25,8 +25,8 @@ interface VisitSummaryState {
 }
 
 // Patient-facing visit summary, shown once the encounter has a finalized note.
-// The provider generates a plain-English summary from the finalized note,
-// edits it, and publishes it to the patient visit record.
+// A published summary stays collapsed until the provider opens or edits it, so
+// finalized patient-facing content is not editable by accident.
 export function PatientVisitSummaryPanel({
   encounterId,
   currentVersion,
@@ -43,8 +43,13 @@ export function PatientVisitSummaryPanel({
   const [savedText, setSavedText] = useState("");
   const [busy, setBusy] = useState<null | "generate" | "save" | "publish">(null);
 
-  // Unsaved edits exist when the textarea diverges from the last saved text.
+  // A published summary collapses to a compact card; expanded/editing control
+  // whether the body is open and whether the textarea is editable.
+  const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+
   const dirty = summary !== null && text !== savedText;
+  const isPublished = summary?.status === "PUBLISHED";
 
   const applySummary = useCallback((next: VisitSummary | null) => {
     setSummary(next);
@@ -60,6 +65,10 @@ export function PatientVisitSummaryPanel({
         const res = await apiFetch<VisitSummaryState>(base);
         if (cancelled) return;
         applySummary(res.summary);
+        // Drafts open for editing; published summaries start collapsed.
+        const draft = res.summary?.status === "DRAFT";
+        setExpanded(Boolean(draft));
+        setEditing(Boolean(draft));
       } catch {
         if (!cancelled) applySummary(null);
       } finally {
@@ -79,6 +88,8 @@ export function PatientVisitSummaryPanel({
         method: "POST",
       });
       applySummary(res);
+      setExpanded(true);
+      setEditing(true);
       toast.push({ type: "success", message: "Patient summary generated" });
     } catch (error) {
       toast.push({
@@ -123,6 +134,9 @@ export function PatientVisitSummaryPanel({
         method: "POST",
       });
       applySummary(res);
+      // Collapse once published so the patient-facing content is put away.
+      setExpanded(false);
+      setEditing(false);
       toast.push({ type: "success", message: "Published to patient visit" });
     } catch (error) {
       toast.push({
@@ -134,16 +148,22 @@ export function PatientVisitSummaryPanel({
     }
   }
 
+  function renderBadge() {
+    if (!summary) return null;
+    return isPublished && !dirty ? (
+      <span className="badge badge-finalized">Published</span>
+    ) : (
+      <span className="badge badge-draft">Draft</span>
+    );
+  }
+
+  const collapsedPublished = isPublished && !expanded;
+
   return (
     <div className="card pvs">
       <div className="panel-head">
         <h3>Patient Visit Summary</h3>
-        {summary &&
-          (summary.status === "PUBLISHED" && !dirty ? (
-            <span className="badge badge-finalized">Published</span>
-          ) : (
-            <span className="badge badge-draft">Draft</span>
-          ))}
+        {renderBadge()}
       </div>
 
       <div className="panel-body">
@@ -152,7 +172,7 @@ export function PatientVisitSummaryPanel({
             <Loader2 className="spin" aria-hidden="true" /> Loading…
           </div>
         ) : !summary ? (
-          <div className="pvs-empty">
+          <div className="pvs-body-enter pvs-empty">
             <p>
               No patient-facing summary has been created for this visit. Generate
               a plain-English summary from the finalized note, review it, then
@@ -163,8 +183,52 @@ export function PatientVisitSummaryPanel({
               Generate summary
             </Button>
           </div>
+        ) : collapsedPublished ? (
+          <div className="pvs-body-enter pvs-collapsed">
+            <div className="pvs-published">
+              {summary.publishedAt
+                ? `Published ${relativeTime(summary.publishedAt)}`
+                : "Published"}
+            </div>
+            {summary.stale && (
+              <div className="pvs-stale" role="status">
+                Built from note v{summary.noteVersionNumber}; the note is now v
+                {summary.currentVersionNumber}. Regenerate before republishing.
+              </div>
+            )}
+            <div className="pvs-actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setExpanded(true);
+                  setEditing(false);
+                }}
+              >
+                Open
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setExpanded(true);
+                  setEditing(true);
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={generate}
+                loading={busy === "generate"}
+              >
+                Regenerate
+              </Button>
+            </div>
+          </div>
         ) : (
-          <>
+          <div className="pvs-body-enter">
             {summary.stale && (
               <div className="pvs-stale" role="status">
                 This summary was generated from note v{summary.noteVersionNumber}.
@@ -173,21 +237,57 @@ export function PatientVisitSummaryPanel({
               </div>
             )}
 
-            {summary.status === "PUBLISHED" && !dirty && summary.publishedAt && (
+            {isPublished && !editing && !dirty && summary.publishedAt && (
               <div className="pvs-published">
                 Published {relativeTime(summary.publishedAt)}
               </div>
             )}
 
-            <textarea
-              className="textarea pvs-area"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              aria-label="Patient visit summary"
-              placeholder="Patient-friendly visit summary…"
-            />
+            {editing || !isPublished ? (
+              <textarea
+                className="textarea pvs-area"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                aria-label="Patient visit summary"
+                placeholder="Patient-friendly visit summary…"
+              />
+            ) : (
+              <div className="pvs-readonly">{text}</div>
+            )}
 
             <div className="pvs-actions">
+              {isPublished && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setExpanded(false);
+                    setEditing(false);
+                    setText(savedText);
+                  }}
+                >
+                  Close
+                </Button>
+              )}
+              {isPublished && !editing ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                >
+                  Edit
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={saveDraft}
+                  loading={busy === "save"}
+                  disabled={!dirty || !text.trim()}
+                >
+                  Save draft
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -197,25 +297,16 @@ export function PatientVisitSummaryPanel({
                 Regenerate
               </Button>
               <Button
-                variant="secondary"
-                size="sm"
-                onClick={saveDraft}
-                loading={busy === "save"}
-                disabled={!dirty || !text.trim()}
-              >
-                Save draft
-              </Button>
-              <Button
                 variant="primary"
                 size="sm"
                 onClick={publish}
                 loading={busy === "publish"}
                 disabled={!text.trim()}
               >
-                Publish to patient visit
+                {isPublished && !dirty ? "Republish" : "Publish to patient visit"}
               </Button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

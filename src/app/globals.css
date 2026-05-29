@@ -1609,6 +1609,52 @@ body {
   margin-bottom: 10px;
   font-feature-settings: var(--num);
 }
+.pvs-readonly {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+}
+.pvs-collapsed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* The panel and its body ease in so a generated summary does not pop abruptly. */
+.pvs {
+  animation: pvsFade var(--dur, 140ms) var(--ease) both;
+}
+.pvs-body-enter {
+  animation: pvsRise 220ms var(--ease) both;
+}
+@keyframes pvsFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pvsRise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvs,
+  .pvs-body-enter {
+    animation: none;
+  }
+}
 .tool-tag {
   display: inline-flex;
   align-items: center;

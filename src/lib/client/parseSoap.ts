@@ -22,10 +22,21 @@ export function parseSoapSections(text: string): NoteSections {
     { key: "plan", re: /^\s*\**\s*plan\s*\**\s*:?/i },
   ];
 
+  // The model is instructed to keep ICD-10 codes inside Assessment, but it
+  // sometimes emits a trailing "ICD-10:" block after Plan. Fold any such block
+  // back into Assessment rather than letting it leak into the Plan section.
+  const icd10HeaderRe = /^\s*\**\s*icd[-\s]?10(\s*codes)?\s*\**\s*:?/i;
+
   const result: NoteSections = { ...EMPTY };
   let current: keyof NoteSections | null = null;
 
   for (const rawLine of text.split("\n")) {
+    if (icd10HeaderRe.test(rawLine)) {
+      current = "assessment";
+      const rest = rawLine.replace(icd10HeaderRe, "").trim();
+      if (rest) result.assessment += (result.assessment ? "\n" : "") + rest;
+      continue;
+    }
     const matched = headers.find((h) => h.re.test(rawLine));
     if (matched) {
       current = matched.key;

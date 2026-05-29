@@ -1932,8 +1932,9 @@ body {
   line-height: 1.6;
   color: var(--text-primary);
   background: var(--surface);
-  resize: vertical;
-  min-height: 72px;
+  resize: none;
+  overflow: hidden;
+  min-height: 40px;
   transition: border-color var(--dur) var(--ease),
     background var(--dur) var(--ease);
 }

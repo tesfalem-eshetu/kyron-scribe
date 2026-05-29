@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import { FileText } from "lucide-react";
 import type { NoteSections } from "@/lib/client/types";
 
@@ -9,6 +10,54 @@ const SECTIONS: { key: keyof NoteSections; letter: string; label: string }[] = [
   { key: "assessment", letter: "A", label: "Assessment" },
   { key: "plan", letter: "P", label: "Plan" },
 ];
+
+// A textarea that grows to fit its content so providers never scroll inside an
+// individual SOAP section; the whole note reads as one continuous document.
+function AutoTextarea({
+  value,
+  readOnly,
+  streaming,
+  label,
+  onChange,
+}: {
+  value: string;
+  readOnly?: boolean;
+  streaming?: boolean;
+  label: string;
+  onChange: (value: string) => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  // Resize whenever the value changes (typing and streaming tokens) and on
+  // mount; also recompute on viewport width changes since reflow alters height.
+  useLayoutEffect(() => {
+    resize();
+  }, [value]);
+
+  useLayoutEffect(() => {
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  return (
+    <textarea
+      ref={ref}
+      className={`soap-area${streaming ? " streaming-on" : ""}`}
+      value={value}
+      readOnly={readOnly}
+      aria-label={label}
+      rows={1}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
 
 function StreamingTag() {
   return (
@@ -70,13 +119,12 @@ export function SoapEditor({
             </span>
             <span className="lbl">{s.label}</span>
           </div>
-          <textarea
-            className={`soap-area${streaming ? " streaming-on" : ""}`}
+          <AutoTextarea
             value={soap[s.key]}
             readOnly={readOnly}
-            aria-label={s.label}
-            rows={s.key === "subjective" || s.key === "objective" ? 4 : 5}
-            onChange={(e) => onChange(s.key, e.target.value)}
+            streaming={streaming}
+            label={s.label}
+            onChange={(value) => onChange(s.key, value)}
           />
         </div>
       ))}

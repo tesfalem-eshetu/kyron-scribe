@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FileText, LogOut, Table2, UserRoundCheck } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   initialsOf,
   useCurrentUser,
@@ -13,17 +13,16 @@ import { apiFetch } from "@/lib/client/api";
 interface NavItem {
   href: string;
   label: string;
-  icon: typeof FileText;
 }
 
 const PROVIDER_NAV: NavItem[] = [
-  { href: "/encounters", label: "Encounters", icon: FileText },
+  { href: "/encounters", label: "Encounters" },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: "/admin/encounters", label: "Encounters", icon: Table2 },
-  { href: "/admin/providers", label: "Providers", icon: UserRoundCheck },
-  { href: "/admin/templates", label: "Templates", icon: FileText },
+  { href: "/admin/encounters", label: "Encounters" },
+  { href: "/admin/providers", label: "Providers" },
+  { href: "/admin/templates", label: "Templates" },
 ];
 
 export function AppShell({
@@ -63,7 +62,6 @@ export function AppShell({
           {nav.map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(item.href + "/");
-            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -71,7 +69,6 @@ export function AppShell({
                 className={active ? "active" : ""}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon aria-hidden="true" />
                 <span className="label">{item.label}</span>
               </Link>
             );

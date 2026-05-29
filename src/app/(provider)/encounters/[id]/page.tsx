@@ -8,7 +8,6 @@ import {
   FileQuestion,
   History,
   Loader2,
-  Lock,
   Save,
   X,
 } from "lucide-react";
@@ -522,29 +521,15 @@ export default function WorkspacePage({
                     <History aria-hidden="true" /> Version History
                   </Button>
                 )}
-                {showFinalizedChip ? (
-                  <span
-                    className="btn btn-secondary"
-                    style={{
-                      cursor: "default",
-                      color: "var(--green-600)",
-                      borderColor: "var(--success-border)",
-                      background: "var(--success-bg)",
-                    }}
+                {!showFinalizedChip && hasContent && (
+                  <Button
+                    variant="primary"
+                    onClick={doSave}
+                    loading={saving}
+                    disabled={isStreaming}
                   >
-                    <Lock aria-hidden="true" /> Finalized · v{baseVersion}
-                  </span>
-                ) : (
-                  hasContent && (
-                    <Button
-                      variant="primary"
-                      onClick={doSave}
-                      loading={saving}
-                      disabled={isStreaming}
-                    >
-                      {!saving && <Save aria-hidden="true" />} Save Final Note
-                    </Button>
-                  )
+                    {!saving && <Save aria-hidden="true" />} Save Final Note
+                  </Button>
                 )}
               </div>
             </>

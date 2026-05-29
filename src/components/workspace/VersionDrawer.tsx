@@ -170,7 +170,6 @@ export function VersionDrawer({
                           className="badge badge-finalized"
                           style={{ height: 18, fontSize: 10 }}
                         >
-                          <span className="dot" aria-hidden="true" />
                           CURRENT
                         </span>
                       )}

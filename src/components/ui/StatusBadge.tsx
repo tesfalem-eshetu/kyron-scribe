@@ -10,18 +10,12 @@ const MAP: Record<EncounterStatus, { cls: string; label: string }> = {
 
 export function StatusBadge({ status }: { status: EncounterStatus }) {
   const m = MAP[status] ?? MAP.DRAFT;
-  return (
-    <span className={`badge ${m.cls}`}>
-      <span className="dot" aria-hidden="true" />
-      {m.label}
-    </span>
-  );
+  return <span className={`badge ${m.cls}`}>{m.label}</span>;
 }
 
 export function SimpleBadge({ active, label }: { active: boolean; label: string }) {
   return (
     <span className={`badge ${active ? "badge-finalized" : "badge-draft"}`}>
-      <span className="dot" aria-hidden="true" />
       {label}
     </span>
   );

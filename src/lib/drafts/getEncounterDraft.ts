@@ -11,6 +11,8 @@ export async function getEncounterDraft(encounterId: string, providerId: string)
     select: {
       id: true,
       status: true,
+      transcript: true,
+      templateId: true,
       patient: {
         select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
       },
@@ -30,13 +32,27 @@ export async function getEncounterDraft(encounterId: string, providerId: string)
     },
   });
 
-  if (!encounter || !encounter.draft) throw notFound("Encounter not found.");
+  if (!encounter) throw notFound("Encounter not found.");
+
+  // A valid encounter can lack a draft row (e.g. a directly-seeded finalized
+  // encounter). Synthesize one from the encounter so it still opens; the
+  // workspace seeds the SOAP sections from the latest NoteVersion anyway.
+  const draft = encounter.draft ?? {
+    transcript: encounter.transcript,
+    selectedTemplateId: encounter.templateId,
+    subjective: null,
+    objective: null,
+    assessment: null,
+    plan: null,
+    status: encounter.status === "FINALIZED" ? "FINALIZED" : "IN_PROGRESS",
+    lastSavedAt: null,
+  };
 
   return {
     encounterId: encounter.id,
     encounterStatus: encounter.status,
     patient: encounter.patient,
     template: encounter.template,
-    draft: encounter.draft,
+    draft,
   };
 }

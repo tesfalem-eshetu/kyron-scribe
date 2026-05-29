@@ -9,7 +9,6 @@ import {
   History,
   Loader2,
   Lock,
-  RotateCcw,
   Save,
   X,
 } from "lucide-react";
@@ -473,7 +472,7 @@ export default function WorkspacePage({
 
   const showFinalizedChip = status === "FINALIZED" && !dirty;
   const hasVersions = baseVersion > 0;
-  const hasHeaderActions = hasVersions || hasContent || isStreaming;
+  const hasHeaderActions = hasVersions || hasContent;
 
   return (
     <div className="ws">
@@ -511,16 +510,6 @@ export default function WorkspacePage({
                     <History aria-hidden="true" /> Version History
                   </Button>
                 )}
-                {(hasContent || isStreaming) && (
-                  <Button
-                    variant="secondary"
-                    onClick={generate}
-                    loading={isStreaming}
-                  >
-                    {!isStreaming && <RotateCcw aria-hidden="true" />}
-                    {isStreaming ? "Generating…" : "Regenerate"}
-                  </Button>
-                )}
                 {showFinalizedChip ? (
                   <span
                     className="btn btn-secondary"
@@ -554,6 +543,7 @@ export default function WorkspacePage({
       <div className="ws-body">
         <div className="col-left">
           <PatientCard patient={patient} />
+          <Icd10Widget onPick={pickIcd} />
           <TemplateSelect
             templates={templates}
             value={templateArchived ? null : templateId}
@@ -561,8 +551,13 @@ export default function WorkspacePage({
             archived={templateArchived}
             disabled={isStreaming}
           />
-          <ObservationsField value={transcript} onChange={editTranscript} />
-          <Icd10Widget onPick={pickIcd} />
+          <ObservationsField
+            value={transcript}
+            onChange={editTranscript}
+            onGenerate={generate}
+            generating={isStreaming}
+            hasContent={hasContent}
+          />
         </div>
 
         <div className="col-right">
@@ -586,7 +581,6 @@ export default function WorkspacePage({
             readOnly={isStreaming}
             streaming={isStreaming}
             hasContent={hasContent}
-            onGenerate={generate}
           />
           {(hasContent || isStreaming) && grounding && (
             <GroundingPanel grounding={grounding} />
@@ -624,9 +618,6 @@ function WorkspaceTopBar({ initials }: { initials: string }) {
         <ArrowLeft aria-hidden="true" /> Encounters
       </Link>
       <div className="brand">
-        <div className="mk" aria-hidden="true">
-          K
-        </div>
         <span className="nm">Kyron Scribe</span>
       </div>
       <div className="right">

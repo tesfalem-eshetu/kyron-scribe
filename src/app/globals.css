@@ -1410,9 +1410,15 @@ body {
   border-color: var(--amber-600) !important;
 }
 .obs-area {
-  min-height: 168px;
+  min-height: 340px;
   font-size: 13px;
   line-height: 1.55;
+}
+.obs-foot {
+  display: flex;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
 }
 .char-meta {
   font-size: 11px;

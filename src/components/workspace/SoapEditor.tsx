@@ -1,7 +1,6 @@
 "use client";
 
-import { FileText, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { FileText } from "lucide-react";
 import type { NoteSections } from "@/lib/client/types";
 
 const SECTIONS: { key: keyof NoteSections; letter: string; label: string }[] = [
@@ -30,14 +29,12 @@ export function SoapEditor({
   readOnly,
   streaming,
   hasContent,
-  onGenerate,
 }: {
   soap: NoteSections;
   onChange: (key: keyof NoteSections, value: string) => void;
   readOnly?: boolean;
   streaming?: boolean;
   hasContent: boolean;
-  onGenerate: () => void;
 }) {
   if (!hasContent && !streaming) {
     return (
@@ -51,12 +48,9 @@ export function SoapEditor({
           </div>
           <h3>No note generated yet</h3>
           <p>
-            Add a transcript in Clinical Observations, then generate a structured
-            SOAP note from the visit.
+            Add the visit transcript in Clinical Observations and pick a
+            template, then use Generate SOAP Note.
           </p>
-          <Button variant="primary" onClick={onGenerate}>
-            <Sparkles aria-hidden="true" /> Generate SOAP Note
-          </Button>
         </div>
       </div>
     );

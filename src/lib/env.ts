@@ -13,6 +13,15 @@ const envSchema = z.object({
   OPENAI_EMBEDDING_MODEL: z.string().min(1).default("text-embedding-3-small"),
   OPENAI_SOAP_GENERATION_MODEL: z.string().min(1).default("gpt-4o-mini"),
   OPENAI_PROBLEM_EXTRACT_MODEL: z.string().min(1).default("gpt-4o-mini"),
+  // Realtime WebRTC dictation (live) and recorded-audio fallback transcription.
+  OPENAI_REALTIME_TRANSCRIBE_MODEL: z
+    .string()
+    .min(1)
+    .default("gpt-4o-transcribe"),
+  OPENAI_FILE_TRANSCRIBE_MODEL: z
+    .string()
+    .min(1)
+    .default("gpt-4o-mini-transcribe"),
 });
 
 const parsed = envSchema.safeParse(process.env);

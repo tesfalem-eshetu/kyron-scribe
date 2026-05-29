@@ -1426,10 +1426,96 @@ body {
   font-feature-settings: var(--num);
 }
 .dictation {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.dictation .panel-head {
-  background: transparent;
+.dictation-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  flex-wrap: wrap;
+}
+.dictation-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-right: auto;
+}
+.dictation-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.dictation-timer {
+  font-feature-settings: var(--num);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.rec-dot.connecting {
+  background: var(--accent);
+}
+.dictation-preview {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.dictation-preview.live {
+  min-height: 56px;
+  color: var(--text-secondary);
+}
+.dictation-hint {
+  color: var(--text-tertiary);
+}
+.dictation-review {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dictation-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dictation-error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-btn:hover {
+  color: var(--accent-strong);
 }
 .tool-tag {
   display: inline-flex;

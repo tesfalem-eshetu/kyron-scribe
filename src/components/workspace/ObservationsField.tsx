@@ -2,6 +2,12 @@
 
 import { RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { DictationControls } from "@/components/workspace/DictationControls";
+
+function appendTranscript(existing: string, addition: string): string {
+  if (!existing.trim()) return addition;
+  return `${existing.replace(/\s*$/, "")}\n\n${addition}`;
+}
 
 export function ObservationsField({
   value,
@@ -29,6 +35,11 @@ export function ObservationsField({
           placeholder="Type, paste, or dictate the raw visit transcript…"
           onChange={(e) => onChange(e.target.value)}
           aria-label="Clinical observations transcript"
+        />
+        <DictationControls
+          onAppend={(text) => onChange(appendTranscript(value, text))}
+          onReplace={(text) => onChange(text)}
+          disabled={generating}
         />
       </div>
       <div className="obs-foot">

@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { embedTexts, EMBEDDING_DIMENSIONS } from "../src/lib/ai/openaiProvider";
+import { pgPoolConfig } from "../src/lib/db/pgPoolConfig";
 
 // One-time (idempotent) embedding generation. Only rows whose embedding is NULL
 // are processed, so this is safe to re-run after adding new codes. Requires
@@ -9,7 +10,7 @@ import { embedTexts, EMBEDDING_DIMENSIONS } from "../src/lib/ai/openaiProvider";
 
 const BATCH_SIZE = 96;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pgPoolConfig(process.env.DATABASE_URL));
 const prisma = new PrismaClient({ adapter });
 
 function toVectorLiteral(vector: number[]): string {

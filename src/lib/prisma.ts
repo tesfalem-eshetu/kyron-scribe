@@ -1,13 +1,14 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { env } from "@/lib/env";
+import { pgPoolConfig } from "@/lib/db/pgPoolConfig";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+  const adapter = new PrismaPg(pgPoolConfig(env.DATABASE_URL));
   return new PrismaClient({ adapter });
 }
 

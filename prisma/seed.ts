@@ -4,10 +4,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { icd10Seed } from "../src/data/icd10Seed";
 import { buildSearchableText } from "../src/lib/icd/buildSearchableText";
+import { pgPoolConfig } from "../src/lib/db/pgPoolConfig";
 
 const BCRYPT_COST_FACTOR = 12;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pgPoolConfig(process.env.DATABASE_URL));
 const prisma = new PrismaClient({ adapter });
 
 const demoUsers = [

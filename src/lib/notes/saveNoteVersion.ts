@@ -16,6 +16,7 @@ export interface SaveNoteVersionInput {
 }
 
 export interface SaveNoteVersionResult {
+  patientId: string;
   noteId: string;
   versionNumber: number;
   versionId: string;
@@ -52,7 +53,12 @@ export async function saveNoteVersion(
   return prisma.$transaction(async (tx) => {
     const encounter = await tx.encounter.findFirst({
       where: { id: input.encounterId, providerId: input.providerId },
-      include: { note: true, draft: true },
+      select: {
+        id: true,
+        patientId: true,
+        note: { select: { id: true } },
+        draft: { select: { id: true } },
+      },
     });
     if (!encounter) throw notFound("Encounter not found.");
 
@@ -136,6 +142,7 @@ export async function saveNoteVersion(
     });
 
     return {
+      patientId: encounter.patientId,
       noteId: note.id,
       versionNumber: nextVersionNumber,
       versionId: version.id,

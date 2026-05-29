@@ -26,3 +26,22 @@ export interface GenerateSoapNoteInput {
   patientHistoryContext: string;
   icd10Candidates: Icd10Candidate[];
 }
+
+export interface NoteSections {
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+}
+
+export interface ClinicalChangeClassification {
+  shouldUpdateSummary: boolean;
+  reason: string;
+}
+
+export interface PatientContextSummaryInput {
+  patientName: string;
+  currentNote: NoteSections;
+  priorSummary: string | null;
+  priorEncounterCount: number;
+}

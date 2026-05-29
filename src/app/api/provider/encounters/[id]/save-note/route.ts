@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireProvider } from "@/lib/auth/guards";
 import { saveNoteVersion } from "@/lib/notes/saveNoteVersion";
+import { runPatientContextSummaryGate } from "@/lib/patients/runPatientContextSummaryGate";
 import { toErrorResponse, validationError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
       plan,
       saveReason: parsed.data.saveReason || undefined,
       baseVersionNumber: parsed.data.baseVersionNumber,
+    });
+
+    // Step 10 (master plan 9.4 / 9.5): post-save summary gate. Runs after the
+    // save transaction has committed and never throws, so it cannot roll back
+    // the saved version.
+    await runPatientContextSummaryGate({
+      patientId: result.patientId,
+      providerId: user.id,
+      noteId: result.noteId,
+      noteVersionId: result.versionId,
+      versionNumber: result.versionNumber,
+      currentSections: { subjective, objective, assessment, plan },
     });
 
     return NextResponse.json(

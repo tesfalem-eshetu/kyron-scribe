@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireProvider } from "@/lib/auth/guards";
 import { extractClinicalProblems, generateSoapNoteStream } from "@/lib/ai/openaiProvider";
 import { getGroundedIcd10Candidates } from "@/lib/ai/groundIcd10Candidates";
+import { getPatientHistoryContext } from "@/lib/ai/getPatientHistoryContext";
 import { INSUFFICIENT_CLINICAL_CONTENT_MESSAGE } from "@/lib/ai/types";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
@@ -42,18 +43,6 @@ function assertTranscriptIsWorthSending(transcript: string) {
       "Transcript is too short to generate a clinical note.",
     );
   }
-}
-
-async function getPatientHistoryContext(patientId: string, providerId: string) {
-  const summary = await prisma.patientContextSummary.findUnique({
-    where: { patientId_providerId: { patientId, providerId } },
-    select: { summaryText: true },
-  });
-
-  return (
-    summary?.summaryText ??
-    "No prior saved encounters found for this provider and patient."
-  );
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {

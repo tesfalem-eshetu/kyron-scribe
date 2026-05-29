@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { icd10Seed } from "../src/data/icd10Seed";
 import { buildSearchableText } from "../src/lib/icd/buildSearchableText";
 import { pgPoolConfig } from "../src/lib/db/pgPoolConfig";
+import { normalizeName, parseDateOfBirth } from "../src/lib/patients/normalizeName";
 
 const BCRYPT_COST_FACTOR = 12;
 
@@ -69,8 +70,110 @@ const demoTemplates = [
   },
 ];
 
+// Fixed IDs make the returning-patient seed idempotent across reseeds.
+const RETURNING_PATIENT = {
+  patientId: "a0000000-0000-4000-8000-000000000001",
+  encounterId: "a0000000-0000-4000-8000-000000000002",
+  noteId: "a0000000-0000-4000-8000-000000000003",
+  noteVersionId: "a0000000-0000-4000-8000-000000000004",
+  firstName: "Robert",
+  lastName: "Returning",
+  dateOfBirth: "1968-03-12",
+  templateId: "11111111-1111-4111-8111-111111111111",
+};
+
+// Seeds a returning patient with a finalized note and a provider-scoped context
+// summary under Dr. Smith so returning-patient context injection is demonstrable
+// without calling OpenAI at seed time (master plan 12 / 8.3). The summaryText is
+// curated, not AI-generated here.
+async function seedReturningPatient(smithId: string | undefined) {
+  if (!smithId) {
+    console.log("Skipped returning patient (Dr. Smith not found).");
+    return;
+  }
+
+  const dateOfBirth = parseDateOfBirth(RETURNING_PATIENT.dateOfBirth);
+
+  await prisma.patient.upsert({
+    where: { id: RETURNING_PATIENT.patientId },
+    update: {},
+    create: {
+      id: RETURNING_PATIENT.patientId,
+      firstName: RETURNING_PATIENT.firstName,
+      lastName: RETURNING_PATIENT.lastName,
+      dateOfBirth,
+      normalizedFirstName: normalizeName(RETURNING_PATIENT.firstName),
+      normalizedLastName: normalizeName(RETURNING_PATIENT.lastName),
+    },
+  });
+
+  await prisma.encounter.upsert({
+    where: { id: RETURNING_PATIENT.encounterId },
+    update: { status: "FINALIZED" },
+    create: {
+      id: RETURNING_PATIENT.encounterId,
+      patientId: RETURNING_PATIENT.patientId,
+      providerId: smithId,
+      templateId: RETURNING_PATIENT.templateId,
+      status: "FINALIZED",
+      transcript:
+        "Follow-up for type 2 diabetes. Reports good adherence to metformin. No hypoglycemia. Mild seasonal allergies.",
+    },
+  });
+
+  await prisma.note.upsert({
+    where: { id: RETURNING_PATIENT.noteId },
+    update: { currentVersionId: RETURNING_PATIENT.noteVersionId },
+    create: {
+      id: RETURNING_PATIENT.noteId,
+      encounterId: RETURNING_PATIENT.encounterId,
+      currentVersionId: RETURNING_PATIENT.noteVersionId,
+    },
+  });
+
+  await prisma.noteVersion.upsert({
+    where: { id: RETURNING_PATIENT.noteVersionId },
+    update: {},
+    create: {
+      id: RETURNING_PATIENT.noteVersionId,
+      noteId: RETURNING_PATIENT.noteId,
+      versionNumber: 1,
+      subjective:
+        "Type 2 diabetes follow-up. Reports good adherence to metformin and no hypoglycemic episodes. Mild seasonal allergic rhinitis.",
+      objective:
+        "Vitals stable. No acute distress. Last A1c mildly elevated at 7.4%.",
+      assessment:
+        "Type 2 diabetes mellitus, reasonably controlled. Seasonal allergic rhinitis.",
+      plan: "Continue metformin. Reinforce diet and exercise. Recheck A1c in 3 months. PRN antihistamine for allergies.",
+      savedByUserId: smithId,
+      saveReason: "Seed: prior finalized encounter.",
+    },
+  });
+
+  await prisma.patientContextSummary.upsert({
+    where: {
+      patientId_providerId: {
+        patientId: RETURNING_PATIENT.patientId,
+        providerId: smithId,
+      },
+    },
+    update: {},
+    create: {
+      patientId: RETURNING_PATIENT.patientId,
+      providerId: smithId,
+      summaryText:
+        "Returning patient with type 2 diabetes mellitus managed on metformin; most recent A1c mildly elevated at 7.4% with good medication adherence and no hypoglycemia. History of seasonal allergic rhinitis. No known drug allergies.",
+      sourceNoteVersionId: RETURNING_PATIENT.noteVersionId,
+      priorEncounterCount: 1,
+    },
+  });
+
+  console.log("Seeded returning patient: Robert Returning (under Dr. Smith)");
+}
+
 async function main() {
   let adminId: string | undefined;
+  const providerIdByEmail = new Map<string, string>();
 
   for (const user of demoUsers) {
     const email = user.email.trim().toLowerCase();
@@ -94,6 +197,7 @@ async function main() {
     });
 
     if (saved.role === "ADMIN") adminId = saved.id;
+    if (saved.role === "PROVIDER") providerIdByEmail.set(email, saved.id);
     console.log(`Seeded ${user.role}: ${email}`);
   }
 
@@ -120,6 +224,8 @@ async function main() {
 
     console.log(`Seeded template: ${template.name}`);
   }
+
+  await seedReturningPatient(providerIdByEmail.get("dr.smith@example.com"));
 
   // ICD-10 catalog. Embeddings are generated separately (one-time, needs an
   // OpenAI key); this step is fully offline and only populates the rows.

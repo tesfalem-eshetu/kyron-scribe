@@ -14,7 +14,8 @@
     "embed:icd10": "tsx scripts/seedIcd10Embeddings.ts",
     "test:generate-stream": "tsx scripts/testGenerateStream.ts",
     "test:save-note": "tsx scripts/testSaveNote.ts",
-    "test:draft": "tsx scripts/testDraft.ts"
+    "test:draft": "tsx scripts/testDraft.ts",
+    "test:context": "tsx scripts/testContext.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

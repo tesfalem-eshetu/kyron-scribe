@@ -8,6 +8,7 @@ export type ApiErrorCode =
   | "INSUFFICIENT_CLINICAL_CONTENT"
   | "TEMPLATE_UNAVAILABLE"
   | "DRAFT_FINALIZED"
+  | "VERSION_CONFLICT"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 
@@ -19,6 +20,7 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   INSUFFICIENT_CLINICAL_CONTENT: 422,
   TEMPLATE_UNAVAILABLE: 409,
   DRAFT_FINALIZED: 409,
+  VERSION_CONFLICT: 409,
   VALIDATION_ERROR: 400,
   INTERNAL_ERROR: 500,
 };
@@ -57,6 +59,10 @@ export const insufficientClinicalContent = (
 export const templateUnavailable = (
   message = "The selected template is unavailable.",
 ) => new ApiError("TEMPLATE_UNAVAILABLE", message);
+
+export const versionConflict = (
+  message = "This note has been updated since you loaded it.",
+) => new ApiError("VERSION_CONFLICT", message);
 
 export function toErrorResponse(error: unknown): NextResponse {
   if (error instanceof ApiError) {

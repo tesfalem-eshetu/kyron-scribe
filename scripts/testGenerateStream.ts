@@ -1,3 +1,5 @@
+export {};
+
 const baseUrl = process.env.KYRON_BASE_URL ?? "http://localhost:3000";
 
 const transcript =

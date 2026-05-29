@@ -5,6 +5,8 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  SESSION_COOKIE_NAME: z.string().min(1).default("session_token"),
+  SESSION_TTL_HOURS: z.coerce.number().int().positive().default(24),
 });
 
 const parsed = envSchema.safeParse(process.env);

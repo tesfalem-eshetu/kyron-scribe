@@ -1,4 +1,4 @@
-# Kyron Scribe
+# Kyron Scribe 12:23
 
 AI clinical scribe platform. A provider enters a visit transcript, picks a
 template, and the app streams a structured SOAP note with grounded ICD-10

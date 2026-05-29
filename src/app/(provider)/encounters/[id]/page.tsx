@@ -11,7 +11,6 @@ import {
   Lock,
   RotateCcw,
   Save,
-  Sparkles,
   X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -26,11 +25,9 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { PatientCard } from "@/components/workspace/PatientCard";
 import { TemplateSelect } from "@/components/workspace/TemplateSelect";
 import { ObservationsField } from "@/components/workspace/ObservationsField";
-import { DictationPanel } from "@/components/workspace/DictationPanel";
 import { Icd10Widget } from "@/components/workspace/Icd10Widget";
 import { SoapEditor } from "@/components/workspace/SoapEditor";
 import { GroundingPanel } from "@/components/workspace/GroundingPanel";
-import { VisitSummaryPanel } from "@/components/workspace/VisitSummaryPanel";
 import { VersionDrawer } from "@/components/workspace/VersionDrawer";
 import { SavedIndicator } from "@/components/workspace/SavedIndicator";
 import type { Grounding, SaveState } from "@/components/workspace/types";
@@ -475,6 +472,8 @@ export default function WorkspacePage({
   }
 
   const showFinalizedChip = status === "FINALIZED" && !dirty;
+  const hasVersions = baseVersion > 0;
+  const hasHeaderActions = hasVersions || hasContent || isStreaming;
 
   return (
     <div className="ws">
@@ -503,53 +502,52 @@ export default function WorkspacePage({
               version={baseVersion || null}
             />
           </div>
-          <div className="hdiv" aria-hidden="true" />
-          <div className="actions">
-            <Button variant="ghost" onClick={() => setDrawerOpen(true)}>
-              <History aria-hidden="true" /> Version History
-            </Button>
-            {hasContent ? (
-              <Button
-                variant="secondary"
-                onClick={generate}
-                loading={isStreaming}
-              >
-                {!isStreaming && <RotateCcw aria-hidden="true" />}
-                {isStreaming ? "Generating…" : "Regenerate"}
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={generate}
-                loading={isStreaming}
-              >
-                {!isStreaming && <Sparkles aria-hidden="true" />}
-                {isStreaming ? "Generating…" : "Generate SOAP Note"}
-              </Button>
-            )}
-            {showFinalizedChip ? (
-              <span
-                className="btn btn-secondary"
-                style={{
-                  cursor: "default",
-                  color: "var(--green-600)",
-                  borderColor: "var(--success-border)",
-                  background: "var(--success-bg)",
-                }}
-              >
-                <Lock aria-hidden="true" /> Finalized · v{baseVersion}
-              </span>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={doSave}
-                loading={saving}
-                disabled={!hasContent || isStreaming}
-              >
-                {!saving && <Save aria-hidden="true" />} Save Final Note
-              </Button>
-            )}
-          </div>
+          {hasHeaderActions && (
+            <>
+              <div className="hdiv" aria-hidden="true" />
+              <div className="actions">
+                {hasVersions && (
+                  <Button variant="ghost" onClick={() => setDrawerOpen(true)}>
+                    <History aria-hidden="true" /> Version History
+                  </Button>
+                )}
+                {(hasContent || isStreaming) && (
+                  <Button
+                    variant="secondary"
+                    onClick={generate}
+                    loading={isStreaming}
+                  >
+                    {!isStreaming && <RotateCcw aria-hidden="true" />}
+                    {isStreaming ? "Generating…" : "Regenerate"}
+                  </Button>
+                )}
+                {showFinalizedChip ? (
+                  <span
+                    className="btn btn-secondary"
+                    style={{
+                      cursor: "default",
+                      color: "var(--green-600)",
+                      borderColor: "var(--success-border)",
+                      background: "var(--success-bg)",
+                    }}
+                  >
+                    <Lock aria-hidden="true" /> Finalized · v{baseVersion}
+                  </span>
+                ) : (
+                  hasContent && (
+                    <Button
+                      variant="primary"
+                      onClick={doSave}
+                      loading={saving}
+                      disabled={isStreaming}
+                    >
+                      {!saving && <Save aria-hidden="true" />} Save Final Note
+                    </Button>
+                  )
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -564,7 +562,6 @@ export default function WorkspacePage({
             disabled={isStreaming}
           />
           <ObservationsField value={transcript} onChange={editTranscript} />
-          <DictationPanel />
           <Icd10Widget onPick={pickIcd} />
         </div>
 
@@ -594,7 +591,6 @@ export default function WorkspacePage({
           {(hasContent || isStreaming) && grounding && (
             <GroundingPanel grounding={grounding} />
           )}
-          <VisitSummaryPanel available={status === "FINALIZED"} />
         </div>
       </div>
 

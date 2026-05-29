@@ -100,16 +100,6 @@ export default function DashboardPage() {
 
   return (
     <AppShell variant="provider">
-      <div className="page-head">
-        <div>
-          <h1>Encounters</h1>
-          <div className="sub">Your clinical notes and unfinished drafts</div>
-        </div>
-        <Button variant="primary" onClick={() => setModalOpen(true)}>
-          <Plus aria-hidden="true" /> New Encounter
-        </Button>
-      </div>
-
       {loadError && (
         <InlineAlert type="error" title="Could not load encounters." className="mb-3">
           {loadError}
@@ -141,11 +131,9 @@ export default function DashboardPage() {
             )}
           </button>
         </div>
-        {!loading && !showEmptyAll && !showEmptyFilter && (
-          <div className="result-count">
-            {rows.length} {rows.length === 1 ? "encounter" : "encounters"}
-          </div>
-        )}
+        <Button variant="primary" onClick={() => setModalOpen(true)}>
+          <Plus aria-hidden="true" /> New Encounter
+        </Button>
       </div>
 
       <div className="card" style={{ overflow: "hidden" }}>

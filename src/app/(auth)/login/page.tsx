@@ -77,9 +77,6 @@ export default function LoginPage() {
         <div className="card login-card">
           <div className="login-head">
             <div className="login-brand">
-              <span className="login-mark" aria-hidden="true">
-                K
-              </span>
               <span className="wordmark">Kyron Scribe</span>
             </div>
             <p className="login-desc">Clinical documentation</p>

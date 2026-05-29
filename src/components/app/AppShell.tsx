@@ -57,9 +57,6 @@ export function AppShell({
           href={variant === "admin" ? "/admin/encounters" : "/encounters"}
           className="tb-brand"
         >
-          <span className="tb-mark" aria-hidden="true">
-            K
-          </span>
           <span className="nm">Kyron Scribe</span>
         </Link>
         <nav className="rolenav" aria-label="Primary">

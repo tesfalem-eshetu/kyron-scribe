@@ -1,7 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// AI Clinical Scribe Platform - canonical schema.
+// Models mirror master_implementation_plan.md Section 6. Client wiring uses
+// Prisma 7 (prisma-client generator + @prisma/adapter-pg driver adapter).
+// The Icd10Code.embedding vector(1536) column is added by a raw SQL migration
+// because Prisma does not model pgvector types natively.
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +11,331 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  PROVIDER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EncounterStatus {
+  DRAFT
+  GENERATING
+  GENERATED
+  FINALIZED
+  ERROR
+}
+
+enum DraftStatus {
+  IN_PROGRESS
+  GENERATED
+  FINALIZED
+  ABANDONED
+}
+
+enum PatientContextSummaryEventAction {
+  UPDATED
+  SKIPPED_NOT_MEANINGFUL
+  FAILED
+}
+
+enum PatientVisitSummaryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// ---------------------------------------------------------------------------
+// Identity and security
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+
+  sessions             Session[]
+  auditLogs            AuditLog[]
+  encounters           Encounter[]                  @relation("ProviderEncounters")
+  encounterDrafts      EncounterDraft[]
+  noteVersions         NoteVersion[]                @relation("NoteVersionSavedBy")
+  contextSummaries     PatientContextSummary[]
+  contextSummaryEvents PatientContextSummaryEvent[]
+  visitSummaries       PatientVisitSummary[]
+  templatesCreated     Template[]                   @relation("TemplateCreatedBy")
+  templatesUpdated     Template[]                   @relation("TemplateUpdatedBy")
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Clinical core
+// ---------------------------------------------------------------------------
+
+model Patient {
+  id                  String   @id @default(uuid())
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime
+  normalizedFirstName String
+  normalizedLastName  String
+
+  encounters           Encounter[]
+  contextSummaries     PatientContextSummary[]
+  contextSummaryEvents PatientContextSummaryEvent[]
+  visitSummaries       PatientVisitSummary[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([normalizedFirstName, normalizedLastName, dateOfBirth])
+  @@index([lastName, dateOfBirth])
+}
+
+model Encounter {
+  id                     String          @id @default(uuid())
+  patientId              String
+  providerId             String
+  templateId             String?
+  status                 EncounterStatus @default(DRAFT)
+
+  transcript             String?
+  templateNameSnapshot   String?
+  templatePromptSnapshot String?
+
+  patient                Patient         @relation(fields: [patientId], references: [id])
+  provider               User            @relation("ProviderEncounters", fields: [providerId], references: [id])
+  template               Template?       @relation(fields: [templateId], references: [id])
+
+  note                   Note?
+  draft                  EncounterDraft?
+  visitSummary           PatientVisitSummary?
+
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  @@index([providerId])
+  @@index([patientId])
+  @@index([templateId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EncounterDraft {
+  id                 String      @id @default(uuid())
+  encounterId        String      @unique
+  providerId         String
+
+  transcript         String?
+  selectedTemplateId String?
+
+  subjective         String?
+  objective          String?
+  assessment         String?
+  plan               String?
+
+  status             DraftStatus @default(IN_PROGRESS)
+
+  lastSavedAt        DateTime    @default(now())
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  encounter          Encounter   @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  provider           User        @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model Template {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  promptText  String
+  isActive    Boolean     @default(true)
+
+  createdById String?
+  updatedById String?
+
+  encounters  Encounter[]
+  createdBy   User?       @relation("TemplateCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?       @relation("TemplateUpdatedBy", fields: [updatedById], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([isActive])
+}
+
+model Note {
+  id               String        @id @default(uuid())
+  encounterId      String        @unique
+  currentVersionId String?
+
+  encounter        Encounter     @relation(fields: [encounterId], references: [id])
+  versions         NoteVersion[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model NoteVersion {
+  id            String   @id @default(uuid())
+  noteId        String
+  versionNumber Int
+
+  subjective    String
+  objective     String
+  assessment    String
+  plan          String
+  fullText      String?
+
+  savedByUserId String
+  saveReason    String?
+
+  createdAt     DateTime @default(now())
+
+  note                 Note                         @relation(fields: [noteId], references: [id])
+  savedBy              User                         @relation("NoteVersionSavedBy", fields: [savedByUserId], references: [id])
+  contextSummaryEvents PatientContextSummaryEvent[]
+  visitSummaries       PatientVisitSummary[]
+
+  @@unique([noteId, versionNumber])
+  @@index([noteId])
+  @@index([savedByUserId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// ICD-10 catalog (embedding column added by raw SQL migration)
+// ---------------------------------------------------------------------------
+
+model Icd10Code {
+  id             String   @id @default(uuid())
+  code           String   @unique
+  description    String
+  category       String?
+  synonyms       String[]
+  searchableText String
+  isActive       Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// AI context and patient-facing artifacts
+// ---------------------------------------------------------------------------
+
+model PatientContextSummary {
+  id                  String   @id @default(uuid())
+  patientId           String
+  providerId          String
+
+  summaryText         String
+  sourceNoteVersionId String?
+  priorEncounterCount Int      @default(0)
+
+  patient             Patient  @relation(fields: [patientId], references: [id])
+  provider            User     @relation(fields: [providerId], references: [id])
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([patientId, providerId])
+  @@index([patientId])
+  @@index([providerId])
+}
+
+model PatientContextSummaryEvent {
+  id                String   @id @default(uuid())
+  patientId         String
+  providerId        String
+  noteVersionId     String
+
+  action            PatientContextSummaryEventAction
+  reason            String?
+  meaningfulChanges Json?
+
+  patient           Patient     @relation(fields: [patientId], references: [id])
+  provider          User        @relation(fields: [providerId], references: [id])
+  noteVersion       NoteVersion @relation(fields: [noteVersionId], references: [id])
+
+  createdAt         DateTime    @default(now())
+
+  @@index([patientId])
+  @@index([providerId])
+  @@index([noteVersionId])
+  @@index([createdAt])
+}
+
+model PatientVisitSummary {
+  id            String                    @id @default(uuid())
+  patientId     String
+  encounterId   String                    @unique
+  providerId    String
+  noteVersionId String
+
+  summaryText   String
+  followUpText  String?
+  status        PatientVisitSummaryStatus @default(DRAFT)
+
+  patient       Patient     @relation(fields: [patientId], references: [id])
+  encounter     Encounter   @relation(fields: [encounterId], references: [id])
+  provider      User        @relation(fields: [providerId], references: [id])
+  noteVersion   NoteVersion @relation(fields: [noteVersionId], references: [id])
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  publishedAt   DateTime?
+
+  @@index([patientId])
+  @@index([encounterId])
+  @@index([providerId])
+  @@index([status])
 }

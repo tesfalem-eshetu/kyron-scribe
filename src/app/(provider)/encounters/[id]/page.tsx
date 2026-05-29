@@ -26,6 +26,7 @@ import { ObservationsField } from "@/components/workspace/ObservationsField";
 import { Icd10Widget } from "@/components/workspace/Icd10Widget";
 import { SoapEditor } from "@/components/workspace/SoapEditor";
 import { GroundingPanel } from "@/components/workspace/GroundingPanel";
+import { PatientVisitSummaryPanel } from "@/components/workspace/PatientVisitSummaryPanel";
 import { VersionDrawer } from "@/components/workspace/VersionDrawer";
 import { SavedIndicator } from "@/components/workspace/SavedIndicator";
 import type { Grounding, SaveState } from "@/components/workspace/types";
@@ -581,6 +582,12 @@ export default function WorkspacePage({
           />
           {(hasContent || isStreaming) && grounding && (
             <GroundingPanel grounding={grounding} />
+          )}
+          {finalizedOnServer && hasVersions && (
+            <PatientVisitSummaryPanel
+              encounterId={id}
+              currentVersion={baseVersion}
+            />
           )}
         </div>
       </div>

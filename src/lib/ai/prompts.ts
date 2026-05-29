@@ -1,6 +1,7 @@
 import type {
   GenerateSoapNoteInput,
   PatientContextSummaryInput,
+  PatientVisitSummaryInput,
 } from "./types";
 import { INSUFFICIENT_CLINICAL_CONTENT_MESSAGE } from "./types";
 
@@ -142,5 +143,46 @@ export function buildPatientContextSummaryInput(
     `Objective:\n${input.currentNote.objective}`,
     `Assessment:\n${input.currentNote.assessment}`,
     `Plan:\n${input.currentNote.plan}`,
+  ].join("\n");
+}
+
+// Turn a finalized, provider-reviewed SOAP note into a plain-English visit
+// summary the patient can read. The provider reviews and edits before
+// publishing; this is patient-facing, not clinical documentation.
+export function buildPatientVisitSummaryInput(
+  input: PatientVisitSummaryInput,
+): string {
+  return [
+    "You are generating a patient-friendly visit summary from a finalized,",
+    "provider-reviewed SOAP note. The provider will review and edit it before it",
+    "is published to the patient's visit record.",
+    "",
+    "Rules:",
+    "- Use plain English; keep the tone calm, clear, and professional.",
+    "- Address the patient directly (e.g. \"Today we discussed...\").",
+    "- Do NOT mention ICD-10 codes or any billing language.",
+    "- Do NOT invent diagnoses, medications, doses, test results, treatments, or",
+    "  follow-up instructions. Only use information supported by the note.",
+    "- Explain medical terms in simple language where possible.",
+    "- If the plan or follow-up instructions are missing or unclear, say the",
+    "  provider should complete the follow-up instructions before publishing,",
+    "  rather than inventing them.",
+    "- Do not give emergency advice unless it is supported by the note or phrased",
+    "  in safe, general terms.",
+    "- Keep it concise enough to read quickly.",
+    "",
+    "Return the summary under exactly these headings, each on its own line:",
+    "Visit Summary",
+    "Next Steps",
+    "Follow-Up",
+    "When to Seek Care",
+    "",
+    `PATIENT FIRST NAME: ${input.patientFirstName}`,
+    "",
+    "FINALIZED SOAP NOTE:",
+    `Subjective:\n${input.note.subjective}`,
+    `Objective:\n${input.note.objective}`,
+    `Assessment:\n${input.note.assessment}`,
+    `Plan:\n${input.note.plan}`,
   ].join("\n");
 }

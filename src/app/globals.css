@@ -1559,6 +1559,56 @@ body {
 .link-btn:hover {
   color: var(--accent-strong);
 }
+.pvs-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.pvs-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pvs-empty p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.pvs-empty .btn {
+  align-self: flex-start;
+}
+.pvs-area {
+  min-height: 240px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pvs-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.pvs-actions .btn-primary {
+  margin-left: auto;
+}
+.pvs-stale {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.pvs-published {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+  font-feature-settings: var(--num);
+}
 .tool-tag {
   display: inline-flex;
   align-items: center;

@@ -6,6 +6,7 @@ import {
   buildClinicalProblemExtractionInput,
   buildClinicalChangeClassificationInput,
   buildPatientContextSummaryInput,
+  buildPatientVisitSummaryInput,
   buildSoapGenerationInput,
 } from "./prompts";
 import type {
@@ -13,6 +14,7 @@ import type {
   ExtractedClinicalProblem,
   GenerateSoapNoteInput,
   PatientContextSummaryInput,
+  PatientVisitSummaryInput,
 } from "./types";
 
 // vector(1536) in the schema is tied to text-embedding-3-small's native size.
@@ -109,6 +111,20 @@ export async function generatePatientContextSummary(
   const response = await client.responses.create({
     model: env.OPENAI_PROBLEM_EXTRACT_MODEL,
     input: buildPatientContextSummaryInput(input),
+  });
+
+  return response.output_text.trim();
+}
+
+// Patient-facing visit summary from a finalized note. Non-streaming: the
+// provider reviews and edits the returned text before publishing.
+export async function generateVisitSummaryText(
+  input: PatientVisitSummaryInput,
+): Promise<string> {
+  const client = getOpenAIClient();
+  const response = await client.responses.create({
+    model: env.OPENAI_SOAP_GENERATION_MODEL,
+    input: buildPatientVisitSummaryInput(input),
   });
 
   return response.output_text.trim();

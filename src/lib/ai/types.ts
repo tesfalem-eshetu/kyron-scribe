@@ -45,3 +45,8 @@ export interface PatientContextSummaryInput {
   priorSummary: string | null;
   priorEncounterCount: number;
 }
+
+export interface PatientVisitSummaryInput {
+  patientFirstName: string;
+  note: NoteSections;
+}

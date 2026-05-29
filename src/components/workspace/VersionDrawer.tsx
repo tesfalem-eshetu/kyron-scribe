@@ -151,10 +151,6 @@ export function VersionDrawer({
 
           {!loading && !error && !selected && versions.length > 0 && (
             <>
-              <div className="ver-note">
-                <Lock aria-hidden="true" /> Saved versions are immutable. Only{" "}
-                <b>Save Final Note</b> creates a new version.
-              </div>
               {versions.map((v) => (
                 <button
                   className={`ver ver-row${

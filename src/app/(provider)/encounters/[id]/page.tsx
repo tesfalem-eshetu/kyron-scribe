@@ -271,6 +271,8 @@ export default function WorkspacePage({
     setGrounding(null);
     setSoap(EMPTY_SOAP);
     setStatus("GENERATING");
+    // Bring the SOAP panel into view so the provider can watch it stream in.
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     await startStream({
       encounterId: id,

@@ -15,7 +15,8 @@
     "test:generate-stream": "tsx scripts/testGenerateStream.ts",
     "test:save-note": "tsx scripts/testSaveNote.ts",
     "test:draft": "tsx scripts/testDraft.ts",
-    "test:context": "tsx scripts/testContext.ts"
+    "test:context": "tsx scripts/testContext.ts",
+    "test:admin": "tsx scripts/testAdmin.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

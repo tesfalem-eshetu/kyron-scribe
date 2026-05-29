@@ -9,6 +9,7 @@ export type ApiErrorCode =
   | "TEMPLATE_UNAVAILABLE"
   | "DRAFT_FINALIZED"
   | "VERSION_CONFLICT"
+  | "CONFLICT"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 
@@ -21,6 +22,7 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   TEMPLATE_UNAVAILABLE: 409,
   DRAFT_FINALIZED: 409,
   VERSION_CONFLICT: 409,
+  CONFLICT: 409,
   VALIDATION_ERROR: 400,
   INTERNAL_ERROR: 500,
 };
@@ -67,6 +69,9 @@ export const versionConflict = (
 export const draftFinalized = (
   message = "This encounter is finalized and can no longer be autosaved.",
 ) => new ApiError("DRAFT_FINALIZED", message);
+
+export const conflict = (message = "This resource already exists.") =>
+  new ApiError("CONFLICT", message);
 
 export function toErrorResponse(error: unknown): NextResponse {
   if (error instanceof ApiError) {

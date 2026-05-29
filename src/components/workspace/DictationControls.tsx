@@ -1,10 +1,13 @@
 "use client";
 
+import { Mic } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useRealtimeDictation } from "@/lib/client/useRealtimeDictation";
 
-function formatElapsed(ms: number): string {
-  const total = Math.floor(ms / 1000);
+const WARN_THRESHOLD_MS = 30_000;
+
+function formatClock(ms: number): string {
+  const total = Math.ceil(ms / 1000);
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
@@ -28,13 +31,15 @@ export function DictationControls({
     mode,
     liveText,
     reviewText,
-    elapsedMs,
+    remainingMs,
     error,
     startRealtime,
     startFallback,
     stop,
     reset,
   } = dictation;
+
+  const timeLow = remainingMs <= WARN_THRESHOLD_MS;
 
   const append = () => {
     if (reviewText.trim()) onAppend(reviewText.trim());
@@ -51,14 +56,18 @@ export function DictationControls({
         <span className="dictation-label">Voice dictation</span>
 
         {status === "idle" && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={startRealtime}
-            disabled={disabled}
-          >
-            Start dictation
-          </Button>
+          <span className="dictation-cta">
+            <button
+              type="button"
+              className="mic-btn"
+              onClick={startRealtime}
+              disabled={disabled}
+              aria-label="Start voice dictation"
+            >
+              <Mic aria-hidden="true" />
+            </button>
+            <span className="dictation-hint">Dictate observations</span>
+          </span>
         )}
 
         {(status === "requesting-mic" || status === "connecting") && (
@@ -76,9 +85,14 @@ export function DictationControls({
         {status === "recording" && (
           <span className="dictation-state">
             <span className="rec-dot" aria-hidden="true" />
-            <span className="dictation-timer">
-              {mode === "fallback" ? "Recording" : "Listening"}{" "}
-              {formatElapsed(elapsedMs)}
+            <span className="dictation-mode">
+              {mode === "fallback" ? "Recording" : "Listening"}
+            </span>
+            <span
+              className={`dictation-timer${timeLow ? " warn" : ""}`}
+              aria-label={`${formatClock(remainingMs)} remaining`}
+            >
+              {formatClock(remainingMs)}
             </span>
             <Button variant="secondary" size="sm" onClick={stop}>
               Stop

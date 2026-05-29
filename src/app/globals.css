@@ -1457,13 +1457,59 @@ body {
   font-size: 12.5px;
   color: var(--text-secondary);
 }
+.dictation-mode {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
 .dictation-timer {
   font-feature-settings: var(--num);
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.dictation-timer.warn {
+  color: var(--danger-text);
 }
 .rec-dot.connecting {
   background: var(--accent);
+}
+.dictation-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mic-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+  flex: none;
+  transition: background var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.mic-btn:hover:not(:disabled) {
+  background: var(--accent-strong);
+  transform: scale(1.05);
+}
+.mic-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mic-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.mic-btn svg {
+  width: 18px;
+  height: 18px;
 }
 .dictation-preview {
   font-size: 12.5px;
@@ -1479,6 +1525,7 @@ body {
 }
 .dictation-preview.live {
   min-height: 56px;
+  max-height: none;
   color: var(--text-secondary);
 }
 .dictation-hint {

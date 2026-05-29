@@ -21,7 +21,7 @@ export type DictationStatus =
 export type DictationMode = "realtime" | "fallback";
 
 const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
-const MAX_DURATION_MS = 120_000;
+const MAX_DURATION_MS = 180_000;
 
 export interface UseRealtimeDictation {
   status: DictationStatus;
@@ -29,6 +29,7 @@ export interface UseRealtimeDictation {
   liveText: string;
   reviewText: string;
   elapsedMs: number;
+  remainingMs: number;
   error: string | null;
   active: boolean;
   startRealtime: () => Promise<void>;
@@ -405,6 +406,7 @@ export function useRealtimeDictation(): UseRealtimeDictation {
     liveText,
     reviewText,
     elapsedMs,
+    remainingMs: Math.max(0, MAX_DURATION_MS - elapsedMs),
     error,
     active,
     startRealtime,

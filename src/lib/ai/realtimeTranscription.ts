@@ -47,8 +47,15 @@ export async function createRealtimeTranscriptionSecret(
         audio: {
           input: {
             transcription: { model, language: "en" },
-            // Server-side VAD segments speech so completed-transcript events fire.
-            turn_detection: { type: "server_vad" },
+            // Server-side VAD segments speech so transcript events fire. A short
+            // silence window commits segments quickly, so text surfaces closer
+            // to as-spoken instead of only after long pauses.
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 350,
+            },
           },
         },
       },

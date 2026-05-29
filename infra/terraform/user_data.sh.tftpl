@@ -8,11 +8,12 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y curl git nginx ca-certificates gnupg unzip
 
-# Node.js 20 (NodeSource) + pnpm via corepack.
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+# Node.js 22 (NodeSource) + pnpm via corepack. pnpm is pinned to the version
+# in package.json's packageManager field; corepack respects that at runtime.
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt-get install -y nodejs
 corepack enable
-corepack prepare pnpm@latest --activate
+corepack prepare pnpm@11.4.0 --activate
 
 # AWS CLI v2 (used by fetch-env to read SSM parameters at startup).
 curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip

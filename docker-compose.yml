@@ -1,0 +1,21 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: kyron_scribe_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kyron
+      POSTGRES_PASSWORD: kyron_dev_password
+      POSTGRES_DB: kyron_scribe
+    ports:
+      - "5433:5432"
+    volumes:
+      - kyron_scribe_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kyron -d kyron_scribe"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kyron_scribe_pgdata:

@@ -1,0 +1,19 @@
+[Unit]
+Description=Kyron Scribe (Next.js) application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kyron
+WorkingDirectory=/opt/kyron-scribe
+EnvironmentFile=/opt/kyron-scribe/.env
+ExecStart=/usr/bin/pnpm start
+Restart=always
+RestartSec=5
+# Next.js listens on PORT; nginx proxies to it on localhost only.
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+
+[Install]
+WantedBy=multi-user.target

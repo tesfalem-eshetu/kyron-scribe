@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# Bootstraps system dependencies only. Application code + build are handled
+# afterwards by deploy/scripts/deploy.sh (keeps app lifecycle out of Terraform).
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y curl git nginx ca-certificates gnupg unzip
+
+# Node.js 20 (NodeSource) + pnpm via corepack.
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# AWS CLI v2 (used by fetch-env to read SSM parameters at startup).
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install || /tmp/aws/install --update
+rm -rf /tmp/aws /tmp/awscliv2.zip
+
+# certbot for Let's Encrypt TLS.
+snap install core || true
+snap refresh core || true
+snap install --classic certbot || true
+ln -sf /snap/bin/certbot /usr/bin/certbot || true
+
+# App user + directory.
+id -u ${app_user} >/dev/null 2>&1 || useradd --system --create-home --shell /bin/bash ${app_user}
+mkdir -p ${app_dir}
+chown -R ${app_user}:${app_user} ${app_dir}
+
+# Record config the deploy script needs.
+cat >/etc/${project_name}.env <<EOF
+PROJECT_NAME=${project_name}
+AWS_REGION=${region}
+APP_DIR=${app_dir}
+APP_USER=${app_user}
+DOMAIN_NAME=${domain_name}
+EOF
+
+echo "Bootstrap complete. Run deploy/scripts/deploy.sh next."

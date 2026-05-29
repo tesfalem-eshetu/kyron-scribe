@@ -11,6 +11,8 @@ const envSchema = z.object({
   // openaiClient throws a clear error if it is missing when actually used.
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_EMBEDDING_MODEL: z.string().min(1).default("text-embedding-3-small"),
+  OPENAI_SOAP_GENERATION_MODEL: z.string().min(1).default("gpt-4o-mini"),
+  OPENAI_PROBLEM_EXTRACT_MODEL: z.string().min(1).default("gpt-4o-mini"),
 });
 
 const parsed = envSchema.safeParse(process.env);

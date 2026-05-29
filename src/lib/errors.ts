@@ -50,6 +50,14 @@ export const notFound = (message = "Resource not found.") =>
 export const validationError = (message = "The request was invalid.") =>
   new ApiError("VALIDATION_ERROR", message);
 
+export const insufficientClinicalContent = (
+  message = "The provided input does not contain enough clinically meaningful information.",
+) => new ApiError("INSUFFICIENT_CLINICAL_CONTENT", message);
+
+export const templateUnavailable = (
+  message = "The selected template is unavailable.",
+) => new ApiError("TEMPLATE_UNAVAILABLE", message);
+
 export function toErrorResponse(error: unknown): NextResponse {
   if (error instanceof ApiError) {
     return NextResponse.json(

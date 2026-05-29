@@ -13,7 +13,30 @@ import {
 import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import { apiFetch, isApiError } from "@/lib/client/api";
 import { formatDateTime } from "@/lib/client/format";
+import { diffWords, hasChanges, type DiffPart } from "@/lib/client/diffWords";
 import type { NoteSections, NoteVersion } from "@/lib/client/types";
+
+function DiffText({ parts }: { parts: DiffPart[] }) {
+  return (
+    <div className="ro-text ro-diff">
+      {parts.map((p, idx) => {
+        if (p.type === "added")
+          return (
+            <ins className="diff-ins" key={idx}>
+              {p.value}
+            </ins>
+          );
+        if (p.type === "removed")
+          return (
+            <del className="diff-del" key={idx}>
+              {p.value}
+            </del>
+          );
+        return <span key={idx}>{p.value}</span>;
+      })}
+    </div>
+  );
+}
 
 const SECTIONS: { key: keyof NoteSections; letter: string; label: string }[] = [
   { key: "subjective", letter: "S", label: "Subjective" },
@@ -225,8 +248,23 @@ export function VersionDrawer({
                 )}
               </div>
 
+              {compare && (
+                <div className="diff-legend">
+                  <span className="diff-key add">
+                    Added in current · v{currentVersion}
+                  </span>
+                  <span className="diff-key del">
+                    Removed since v{selected.versionNumber}
+                  </span>
+                </div>
+              )}
+
               {SECTIONS.map((s) => {
                 const selSections = sectionsOf(selected);
+                const parts = compare
+                  ? diffWords(selSections[s.key], currentSoap[s.key])
+                  : [];
+                const changed = compare && hasChanges(parts);
                 return (
                   <div className="ro-sec" key={s.key}>
                     <div className="sh">
@@ -234,28 +272,18 @@ export function VersionDrawer({
                         {s.letter}
                       </span>
                       <span className="lbl">{s.label}</span>
+                      {compare && !changed && (
+                        <span className="diff-unchanged">No changes</span>
+                      )}
                     </div>
                     {compare ? (
-                      <div className="ro-compare">
-                        <div className="ro-col">
-                          <div className="ro-coltag">v{selected.versionNumber}</div>
-                          <div className="ro-text">
-                            {selSections[s.key] || (
-                              <span className="ro-empty">— empty —</span>
-                            )}
-                          </div>
+                      parts.length > 0 ? (
+                        <DiffText parts={parts} />
+                      ) : (
+                        <div className="ro-text">
+                          <span className="ro-empty">— empty —</span>
                         </div>
-                        <div className="ro-col">
-                          <div className="ro-coltag cur">
-                            Current · v{currentVersion}
-                          </div>
-                          <div className="ro-text">
-                            {currentSoap[s.key] || (
-                              <span className="ro-empty">— empty —</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      )
                     ) : (
                       <div className="ro-text">
                         {selSections[s.key] || (

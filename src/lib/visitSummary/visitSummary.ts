@@ -208,6 +208,28 @@ export async function updateVisitSummary(
   return serialize(saved, encounter.note?.currentVersionId ?? null);
 }
 
+export async function discardVisitSummary(
+  encounterId: string,
+  providerId: string,
+): Promise<void> {
+  await loadOwnedEncounter(encounterId, providerId);
+  const existing = await prisma.patientVisitSummary.findUnique({
+    where: { encounterId },
+    select: { id: true },
+  });
+  if (!existing) return;
+
+  await prisma.patientVisitSummary.delete({ where: { encounterId } });
+
+  await writeAuditLog({
+    userId: providerId,
+    action: "PATIENT_VISIT_SUMMARY_DISCARDED",
+    entityType: "PatientVisitSummary",
+    entityId: existing.id,
+    metadata: { encounterId },
+  });
+}
+
 export async function publishVisitSummary(
   encounterId: string,
   providerId: string,

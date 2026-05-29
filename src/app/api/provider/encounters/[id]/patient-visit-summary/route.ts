@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireProvider } from "@/lib/auth/guards";
 import { toErrorResponse, validationError } from "@/lib/errors";
 import {
+  discardVisitSummary,
   getVisitSummary,
   updateVisitSummary,
 } from "@/lib/visitSummary/visitSummary";
@@ -44,6 +45,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         typeof body.followUpText === "string" ? body.followUpText : null,
     });
     return NextResponse.json(result);
+  } catch (error) {
+    return toErrorResponse(error);
+  }
+}
+
+// Discard the patient visit summary entirely.
+export async function DELETE(_req: NextRequest, context: RouteContext) {
+  try {
+    const user = await requireProvider();
+    const { id } = await context.params;
+    await discardVisitSummary(id, user.id);
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return toErrorResponse(error);
   }

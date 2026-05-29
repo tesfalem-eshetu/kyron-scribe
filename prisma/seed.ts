@@ -2,6 +2,8 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { icd10Seed } from "../src/data/icd10Seed";
+import { buildSearchableText } from "../src/lib/icd/buildSearchableText";
 
 const BCRYPT_COST_FACTOR = 12;
 
@@ -117,6 +119,31 @@ async function main() {
 
     console.log(`Seeded template: ${template.name}`);
   }
+
+  // ICD-10 catalog. Embeddings are generated separately (one-time, needs an
+  // OpenAI key); this step is fully offline and only populates the rows.
+  for (const entry of icd10Seed) {
+    const searchableText = buildSearchableText(entry);
+    await prisma.icd10Code.upsert({
+      where: { code: entry.code },
+      update: {
+        description: entry.description,
+        category: entry.category,
+        synonyms: entry.synonyms,
+        searchableText,
+        isActive: true,
+      },
+      create: {
+        code: entry.code,
+        description: entry.description,
+        category: entry.category,
+        synonyms: entry.synonyms,
+        searchableText,
+        isActive: true,
+      },
+    });
+  }
+  console.log(`Seeded ${icd10Seed.length} ICD-10 codes`);
 }
 
 main()

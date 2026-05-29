@@ -64,6 +64,10 @@ export const versionConflict = (
   message = "This note has been updated since you loaded it.",
 ) => new ApiError("VERSION_CONFLICT", message);
 
+export const draftFinalized = (
+  message = "This encounter is finalized and can no longer be autosaved.",
+) => new ApiError("DRAFT_FINALIZED", message);
+
 export function toErrorResponse(error: unknown): NextResponse {
   if (error instanceof ApiError) {
     return NextResponse.json(

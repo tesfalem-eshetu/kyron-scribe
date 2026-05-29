@@ -93,6 +93,10 @@ export default function WorkspacePage({
   const [saving, setSaving] = useState(false);
   const [, tick] = useState(0);
 
+  // Anchor at the top of the workspace; generation scrolls here so the
+  // provider can watch the SOAP note stream in.
+  const topAnchorRef = useRef<HTMLDivElement>(null);
+
   // refs to read latest values inside debounced autosave
   const transcriptRef = useRef(transcript);
   const soapRef = useRef(soap);
@@ -272,7 +276,12 @@ export default function WorkspacePage({
     setSoap(EMPTY_SOAP);
     setStatus("GENERATING");
     // Bring the SOAP panel into view so the provider can watch it stream in.
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Defer to the next frame so the GENERATING layout has committed, and
+    // scroll instantly -- a smooth scroll gets cancelled by the streaming
+    // re-renders that follow.
+    requestAnimationFrame(() => {
+      topAnchorRef.current?.scrollIntoView({ block: "start" });
+    });
 
     await startStream({
       encounterId: id,
@@ -478,6 +487,7 @@ export default function WorkspacePage({
 
   return (
     <div className="ws">
+      <div ref={topAnchorRef} aria-hidden="true" />
       <WorkspaceTopBar initials={initialsOf(user.fullName)} />
 
       <div className="ws-head">

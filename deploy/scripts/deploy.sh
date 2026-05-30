@@ -53,7 +53,8 @@ echo "==> 2/8 Installing dependencies"
 run_as_app pnpm install --frozen-lockfile
 
 echo "==> 3/8 Generating Prisma client + applying migrations"
-run_as_app pnpm exec prisma generate
+# Client only — skip ERD generator (puppeteer) on the server.
+run_as_app pnpm exec prisma generate --generator client
 run_as_app pnpm exec prisma migrate deploy
 
 echo "==> 4/8 Seeding base data (idempotent)"

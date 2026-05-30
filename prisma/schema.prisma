@@ -9,6 +9,16 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+// ER diagram (SVG). Generate with: pnpm run erd
+// Open prisma/ERD.svg in any browser. Deploy uses `prisma generate --generator client` only.
+generator erd {
+  provider                  = "prisma-erd-generator"
+  output                    = "ERD.svg"
+  theme                     = "neutral"
+  disableEmoji              = true
+  includeRelationFromFields = true
+}
+
 datasource db {
   provider = "postgresql"
 }

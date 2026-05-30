@@ -5,3 +5,4 @@ allowBuilds:
   "@prisma/engines": true
   "@prisma/client": true
   esbuild: true
+  puppeteer: true

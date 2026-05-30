@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "embed:icd10": "tsx scripts/seedIcd10Embeddings.ts",
+    "reset:demo": "tsx scripts/resetDemoData.ts",
     "test:generate-stream": "tsx scripts/testGenerateStream.ts",
     "test:save-note": "tsx scripts/testSaveNote.ts",
     "test:draft": "tsx scripts/testDraft.ts",

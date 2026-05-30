@@ -90,6 +90,7 @@ export default function WorkspacePage({
   const [rightAlert, setRightAlert] = useState<RightAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [conflict, setConflict] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [saving, setSaving] = useState(false);
   const [, tick] = useState(0);
 
@@ -112,6 +113,29 @@ export default function WorkspacePage({
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 5000);
     return () => clearInterval(t);
+  }, []);
+
+  // Refresh the template list when the tab regains focus so admin changes
+  // (added/renamed/archived templates) appear without a manual page refresh.
+  // The active template prompt is always read fresh server-side at generation
+  // time; this only keeps the dropdown labels in sync.
+  useEffect(() => {
+    async function refreshTemplates() {
+      try {
+        const { templates: latest } = await apiFetch<{
+          templates: ProviderTemplate[];
+        }>("/api/provider/templates");
+        setTemplates(latest);
+        const selected = templateRef.current;
+        setTemplateArchived(
+          Boolean(selected) && !latest.some((t) => t.id === selected),
+        );
+      } catch {
+        // Non-critical: keep the current list if the refresh fails.
+      }
+    }
+    window.addEventListener("focus", refreshTemplates);
+    return () => window.removeEventListener("focus", refreshTemplates);
   }, []);
 
   // initial load: draft + active templates + base version
@@ -189,6 +213,21 @@ export default function WorkspacePage({
     };
   }, [id]);
 
+  // A 401 means the session expired (or the account was deactivated) while the
+  // workspace was open. Surface a clear, reassuring prompt instead of a generic
+  // error: edits are autosaved to the server, so no saved work is lost.
+  const isSessionExpired = useCallback((error: unknown) => {
+    if (
+      isApiError(error) &&
+      (error.code === "UNAUTHORIZED" || error.code === "ACCOUNT_INACTIVE")
+    ) {
+      setSessionExpired(true);
+      setSaveState("error");
+      return true;
+    }
+    return false;
+  }, []);
+
   const scheduleAutosave = useCallback(() => {
     if (finalizedOnServer) return; // draft is locked once finalized server-side
     setSaveState("saving");
@@ -215,10 +254,11 @@ export default function WorkspacePage({
           setSaveState("saved");
           return;
         }
+        if (isSessionExpired(error)) return;
         setSaveState("error");
       }
     }, 900);
-  }, [id, finalizedOnServer]);
+  }, [id, finalizedOnServer, isSessionExpired]);
 
   useEffect(() => {
     return () => {
@@ -378,7 +418,7 @@ export default function WorkspacePage({
     } catch (error) {
       if (isApiError(error) && error.code === "VERSION_CONFLICT") {
         setConflict(true);
-      } else {
+      } else if (!isSessionExpired(error)) {
         toast.push({
           type: "error",
           message: isApiError(error) ? error.message : "Could not save the note.",
@@ -609,6 +649,17 @@ export default function WorkspacePage({
           tone="primary"
           onConfirm={reloadLatest}
           onCancel={() => setConflict(false)}
+        />
+      )}
+
+      {sessionExpired && (
+        <ConfirmDialog
+          title="Session expired"
+          body="Your session has expired. Your draft has been saved, so no work is lost. Please log in again to continue."
+          confirmLabel="Log in again"
+          tone="primary"
+          onConfirm={() => router.push("/login")}
+          onCancel={() => router.push("/login")}
         />
       )}
     </div>

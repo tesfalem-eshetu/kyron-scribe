@@ -7,7 +7,20 @@
 export interface PgPoolConfig {
   connectionString: string;
   ssl?: { rejectUnauthorized: boolean };
+  max: number;
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
 }
+
+// Bound the pool explicitly rather than relying on the pg default. A single
+// next start process serves the app; capping connections keeps the process
+// well under RDS max_connections and makes scaling behaviour predictable.
+const MAX_POOL_CONNECTIONS = 10;
+const POOL_LIMITS = {
+  max: MAX_POOL_CONNECTIONS,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 10_000,
+};
 
 export function pgPoolConfig(connectionString: string | undefined): PgPoolConfig {
   if (!connectionString) {
@@ -18,7 +31,7 @@ export function pgPoolConfig(connectionString: string | undefined): PgPoolConfig
   const sslDisabled = /sslmode=disable/.test(connectionString);
 
   if (isLocal || sslDisabled) {
-    return { connectionString };
+    return { connectionString, ...POOL_LIMITS };
   }
 
   // RDS presents an AWS-managed certificate. Within the private VPC the
@@ -26,5 +39,6 @@ export function pgPoolConfig(connectionString: string | undefined): PgPoolConfig
   return {
     connectionString,
     ssl: { rejectUnauthorized: false },
+    ...POOL_LIMITS,
   };
 }

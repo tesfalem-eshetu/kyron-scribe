@@ -11,8 +11,8 @@ const envSchema = z.object({
   // openaiClient throws a clear error if it is missing when actually used.
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_EMBEDDING_MODEL: z.string().min(1).default("text-embedding-3-small"),
-  OPENAI_SOAP_GENERATION_MODEL: z.string().min(1).default("gpt-4o-mini"),
-  OPENAI_PROBLEM_EXTRACT_MODEL: z.string().min(1).default("gpt-4o-mini"),
+  OPENAI_SOAP_GENERATION_MODEL: z.string().min(1).default("gpt-5.5"),
+  OPENAI_PROBLEM_EXTRACT_MODEL: z.string().min(1).default("gpt-5.4-mini"),
   // Realtime WebRTC dictation (live) and recorded-audio fallback transcription.
   OPENAI_REALTIME_TRANSCRIBE_MODEL: z
     .string()

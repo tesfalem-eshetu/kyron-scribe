@@ -42,7 +42,7 @@ resource "aws_ssm_parameter" "embedding_model" {
 resource "aws_ssm_parameter" "soap_model" {
   name  = "${local.ssm_prefix}/OPENAI_SOAP_GENERATION_MODEL"
   type  = "String"
-  value = "gpt-5.4-mini"
+  value = "gpt-5.5"
 }
 
 resource "aws_ssm_parameter" "extract_model" {

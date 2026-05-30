@@ -15,7 +15,7 @@ via Terraform.
 
 1. Provider — core product walkthrough and pioneer features: https://youtu.be/LQpGf8HLY7s
 2. Admin workflow, session persistence, non-happy paths, and context injection for patients with history: https://youtu.be/Hw616NczPtw
-3. Architecture walkthrough: https://youtu.be/GQ0Ku3ycqA4
+3. Architecture walkthrough: https://youtu.be/ajG4tXAiBfE
 
 ## Test accounts
 
